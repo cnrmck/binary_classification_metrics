@@ -1,4 +1,3 @@
-from __future__ import division, print_function
 import doctest
 import copy
 
@@ -83,14 +82,19 @@ def safe_division(num, denom):
     except (ZeroDivisionError, TypeError) as error:
         return None
 
-def safe_print(name, fn, *args):
+def safe_print(name, fn, *args, extra = "", zerodevmsg = ""):
     """
     This function tries to print a number, if that fails it doesn't stop the program
     """
     try:
-        print("{} ({:.2f})".format(name, fn(*args)))
-    except (ZeroDivisionError,ValueError) as e:
-        print("{} cannot be printed:".format(name), e)
+        print("{} ({:.2f}) {}".format(name, fn(*args), extra))
+    except ZeroDivisionError as e:
+        if zerodevmsg is not "":
+            print("{} cannot be printed: {}".format(name, zerodevmsg))
+        else:
+            print("{} cannot be printed: {}".format(name, e))
+    except ValueError as e:
+        print("{} cannot be printed: {}".format(name, e))
 
 #---------------------------------------------------------------
 
@@ -327,10 +331,14 @@ foR = false_omission_rate
 def positive_likelihood_ratio(ground_truth, predicted):
     """
     This function measures the positive likelihood ratio
-    (also called "positive tendancy")
+    (also called " likelihood ratio for positive results")
+
+    sensitivity / (1 - specificity)
+
+    The bigger this number the better.
     """
     return (true_positive_rate(ground_truth, predicted) /
-    false_positive_rate(ground_truth, predicted) )
+    (1 - true_negative_rate(ground_truth, predicted) ))
 
 plr = positive_likelihood_ratio
 
@@ -338,9 +346,13 @@ plr = positive_likelihood_ratio
 def negative_likelihood_ratio(ground_truth, predicted):
     """
     This function measures the negative likelihood ratio
-    (also called "negative tendancy")
+    (also called " likelihood ratio for negative results")
+
+    (1 - sensitivity) / specificity
+
+    The smaller this number the better.
     """
-    return (false_negative_rate(ground_truth, predicted) /
+    return ((1 - true_positive_rate(ground_truth, predicted)) /
     true_negative_rate(ground_truth, predicted) )
 
 nlr = negative_likelihood_ratio
@@ -349,7 +361,9 @@ nlr = negative_likelihood_ratio
 def diagnostic_odds_ratio(ground_truth, predicted):
     """
     This function measures the diagnostic odds ratio
-    (also called "")
+    (also called "detection_tendancy")
+
+    Greater than 1 means the test is discriminating correctly.
     """
     return (positive_likelihood_ratio(ground_truth, predicted) /
     negative_likelihood_ratio(ground_truth, predicted) )
@@ -454,8 +468,6 @@ def run(ground_truth, prediction):
     safe_print("true positive rate", tpr, ground_truth, prediction)
     safe_print("false positive rate", fpr, ground_truth, prediction)
 
-    safe_print("\npositive likelihood ratio", plr, ground_truth, prediction)
-
     safe_print("\npositive predictive value", ppv, ground_truth, prediction)
 
     print("")
@@ -464,16 +476,17 @@ def run(ground_truth, prediction):
     safe_print("true negative rate", tnr, ground_truth, prediction)
     safe_print("false negative rate", fnr, ground_truth, prediction)
 
-    safe_print("\nnegative likelihood ratio", nlr, ground_truth, prediction)
-
     safe_print("\nnegative predictive value", npv, ground_truth, prediction)
 
     print("")
     print("-"*30, "\n")
 
-    safe_print("accuracy", accuracy, ground_truth, prediction)
+    safe_print("positive likelihood ratio", plr, ground_truth, prediction, extra="(bigger is better)")
+    safe_print("negative likelihood ratio", nlr, ground_truth, prediction, extra="(smaller is better)")
 
-    safe_print("\ndiagnostic odds ratio", dor, ground_truth, prediction)
+    safe_print("\ndiagnostic odds ratio", dor, ground_truth, prediction, zerodevmsg="if accuracy is not perfect this is undefined")
+
+    safe_print("\naccuracy", accuracy, ground_truth, prediction)
 
     safe_print("\nf1 score", f1_score, ground_truth, prediction)
 
@@ -509,6 +522,9 @@ def main():
     prediction4 = [1,0,1,0,1,0,1,0,1,0,1,0,1]
     prediction5 = [0,1,0,1,0,1,0,1,0,1,0,1,0]
 
+    # a prediction just two off from perfect (in both directions)
+    prediction6 = [1,1,0,1,1,0,1,1,1,0,1,0,1]
+
 
     predictions = []
     predictions.append(prediction0)
@@ -517,6 +533,7 @@ def main():
     predictions.append(prediction3)
     predictions.append(prediction4)
     predictions.append(prediction5)
+    predictions.append(prediction6)
 
     for i, prediction in enumerate(predictions):
         print("Result {}".format(i))
