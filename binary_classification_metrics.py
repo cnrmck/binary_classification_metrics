@@ -72,16 +72,6 @@ def fix_list_lengths(list1, list2, alert_if_same = False):
 
 #---------------------------------------------------------------
 
-# Safe division function
-def safe_division(num, denom):
-    """
-    This function handles division by zero errors
-    """
-    try:
-        return num / denom
-    except (ZeroDivisionError, TypeError) as error:
-        return None
-
 def safe_print(name, fn, *args, extra = "", zerodevmsg = ""):
     """
     This function tries to print a number, if that fails it doesn't stop the program
